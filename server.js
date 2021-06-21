@@ -2,15 +2,13 @@ const express = require('express');
 const joi = require('joi')
 const bcrypt = require('bcrypt-nodejs');
 const { restart } = require('nodemon');
+const cors = require('cors');
+
 
 
 const server = new express();
 server.use(express.json());
-server.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+server.use(cors());
 
 var validUsers = [
     {
@@ -81,6 +79,7 @@ server.post('/signup', (req, res) => {
             return res.send(user)
         }
     } else {
+        res.status(400);
         return res.send(err)
     }
 })
@@ -103,7 +102,7 @@ server.post('/signin', (req, res) => {
     }
 })
 
-server.post('/postImage', (req, res) => {
+server.put('/postImage', (req, res) => {
     const user = findUserById(req.body.id);
     if (user) {
         user.score++;
