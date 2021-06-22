@@ -3,6 +3,15 @@ const joi = require('joi')
 const bcrypt = require('bcrypt-nodejs');
 const { restart } = require('nodemon');
 const cors = require('cors');
+const knex = require('knex')({
+    client: 'pg',
+    connection: {
+      host : '127.0.0.1',
+      user : 'postgres',
+      password : '95300718',
+      database : 'postgres'
+    }
+  });
 
 
 
@@ -10,107 +19,99 @@ const server = new express();
 server.use(express.json());
 server.use(cors());
 
-var validUsers = [
-    {
-        id: 1,
-        email: 'abbasi_ha@yahoo.com',
-        password: '1234',
-        name: "John",
-        score: 50,
-        joinDate: new Date()
-    },
-    {
-        id: 2,
-        email: 'abbasii_ha@yahoo.com',
-        password: '12345',
-        name: "John",
-        score: 50,
-        joinDate: new Date()
-    },
-    {
-        id: 3,
-        email: 'abbasi1_ha@yahoo.com',
-        password: '123',
-        name: "John",
-        score: 50,
-        joinDate: new Date()
-    }
-]
+var validUsers;
+var loginInfo;
+knex.select('*').from('users').then((resp)=>{
+    validUsers=resp;
+    console.log(validUsers)
+});
+knex.select('*').from('login').then((resp)=>{
+    loginInfo=resp;
+    console.log(loginInfo)
+});
+
 
 
 server.get('/userList', (req, res) => {
-    res.send(validUsers)
+    knex.select('*').from('users').then((resp)=>{
+        validUsers=resp;
+        console.log(validUsers)
+        res.json(validUsers);
+    });
 })
 
 server.post('/user', (req, res) => {
-    if (findUserByEmail(req.body.email)) {
-        res.send(findUserByEmail(req.body.email))
-    } else {
-        res.status(404)
-        res.send("not found")
-    }
-
+    knex
+    .select('*')
+    .from('users')
+    .where({
+        email:req.body.email
+    })
+    .then(data=>{
+        if(data.length>0){
+            console.log(data);
+            res.json(data[0]);
+        } else {
+            res.status(404).send("not found");
+        }
+    })
 })
 
 server.post('/signup', (req, res) => {
-    const err = userInfoValidator(req.body);
-    if (!err) {
-        if (findUserByEmail(req.body.email)) {
-            res.status(400);
-            return res.send("already exist")
-        } else {
-            bcrypt.hash(req.body.password, null, null, function (err, hash) {
-                console.log(hash);
-            });
-
-            // Load hash from your password DB.
-            bcrypt.compare(req.body.password, '$2a$10$p2WASUz/zINmJ4Kg.GXnDebXwXNJAkewQqXnX3gKcNDoYCU7Tq95m', function (err, res) {
-                console.log(res);
-            });
-            bcrypt.compare("veggies", '$2a$10$p2WASUz/zINmJ4Kg.GXnDebXwXNJAkewQqXnX3gKcNDoYCU7Tq95m', function (err, res) {
-                console.log(res);
-            });
-            const user = req.body;
-            user.id = validUsers.length + 1;
-            user.joinDate = new Date();
-            user.score = 0;
-            validUsers.push(user);
-            res.status(200);
-            return res.send(user)
-        }
-    } else {
-        res.status(400);
-        return res.send(err)
-    }
+    knex.transaction((db) =>{
+        bcrypt.hash(req.body.password, null, null, function (err, hash) {
+            db('login').insert({
+                email: req.body.email, 
+                hash: hash
+                }).then(console.log);
+        });
+        res.status(200);
+        db('users')
+        .returning('*')
+        .insert({
+            email: req.body.email, 
+            name: req.body.name,
+            joined: new Date()
+        })
+        .then(response=> res.json(response[0]))
+        .then(db.commit)        
+        .catch(err=> res.status(400).json("something went wrong"));
+    });
 })
 
 
 
 server.post('/signin', (req, res) => {
-    const err = userInfoValidator(req.body);
-    if (!err) {
-        if (checkUserInfo(req.body.email, req.body.password)) {
-            res.status(200);
-            return res.send(findUserByEmail(JSON.stringify(req.body.email)))
-        } else {
-            res.status(404);
-            return res.send({ "result": "not found" })
-        }
-    } else {
-        res.status(400)
-        return res.send({ "result": err })
-    }
+    knex('users')
+    .join('login', 'users.email', '=', 'users.email')
+    .select('*')
+    .then(data=>{
+        const user = data.find(u=> (u.email==req.body.email));
+        console.log(JSON.stringify(user), req.body);
+        bcrypt.compare(req.body.password, user.hash, function (err, resp) {
+            if(resp) {
+                res.json(user);
+            } else {
+                res.status(400).json("wrong password");
+            }
+        });
+    })
+    .catch(err=>res.status(404).json(err))
 })
 
 server.put('/postImage', (req, res) => {
-    const user = findUserById(req.body.id);
-    if (user) {
-        user.score++;
-        res.send(user)
-    } else {
-        res.status(404)
-        res.send("user not found")
-    }
+    knex('users')
+        .returning('*')
+        .where('id','=', req.body.id)
+        .increment('entries',1)
+        .then(response=>{
+            if(response.length>0){
+                res.send(response[0]);
+            } else {
+                res.status(404).send("not found");
+            }
+        })
+        .catch(err=>res.status(400).json("bad request"));
 })
 
 
@@ -127,12 +128,6 @@ findUserByEmail = (email) => {
     return validUsers.find(u => u.email === email)
 }
 
-checkUserInfo = (email, password) => {
-    const user = validUsers.find(u => (u.email === email && u.password === password));
-
-    if (user) return true;
-    else return false;
-}
 
 userInfoValidator = (body) => {
     var schema = joi.object({
