@@ -31,7 +31,9 @@ knex.select('*').from('login').then((resp)=>{
     // console.log(loginInfo)
 });
 
-
+server.get('/', (req, res) => {
+    res.send("everything works");
+})
 
 server.get('/userList', (req, res) => {
     knex.select('*').from('users').then((resp)=>{
@@ -97,7 +99,7 @@ server.put('/postImage', (req, res) => {
 
 
 
-server.listen(3000, () => {
+server.listen(process.env.PORT, () => {
     console.log("Listening to the port 3000")
 })
 
