@@ -14,7 +14,7 @@ const knex = require('knex')({
     }
   });
 
-
+console.log(process.env)
 
 const server = new express();
 server.use(express.json());
@@ -24,11 +24,11 @@ var validUsers;
 var loginInfo;
 knex.select('*').from('users').then((resp)=>{
     validUsers=resp;
-    console.log(validUsers)
+    // console.log(validUsers)
 });
 knex.select('*').from('login').then((resp)=>{
     loginInfo=resp;
-    console.log(loginInfo)
+    // console.log(loginInfo)
 });
 
 
