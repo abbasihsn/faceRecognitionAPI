@@ -1,4 +1,5 @@
 const express = require('express');
+const signUp = require('./controller/signUp');
 const joi = require('joi')
 const bcrypt = require('bcrypt-nodejs');
 const { restart } = require('nodemon');
@@ -57,27 +58,7 @@ server.post('/user', (req, res) => {
     })
 })
 
-server.post('/signup', (req, res) => {
-    knex.transaction((db) =>{
-        bcrypt.hash(req.body.password, null, null, function (err, hash) {
-            db('login').insert({
-                email: req.body.email, 
-                hash: hash
-                }).then(console.log);
-        });
-        res.status(200);
-        db('users')
-        .returning('*')
-        .insert({
-            email: req.body.email, 
-            name: req.body.name,
-            joined: new Date()
-        })
-        .then(response=> res.json(response[0]))
-        .then(db.commit)        
-        .catch(err=> res.status(400).json("something went wrong"));
-    });
-})
+server.post('/signup', ((req, resp)=> signUp.handleRegister(req, resp, knex, bcrypt)))
 
 
 
