@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt-nodejs');
 const { restart } = require('nodemon');
 const cors = require('cors');
 const knex = require('knex')({
+    client:"pg",
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false
