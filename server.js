@@ -12,8 +12,6 @@ const knex = require('knex')({
     }
   });
 
-console.log(process.env)
-
 const server = new express();
 server.use(express.json());
 server.use(cors());
@@ -23,11 +21,11 @@ var loginInfo;
 knex.select('*').from('users').then((resp)=>{
     validUsers=resp;
     // console.log(validUsers)
-});
+}).catch(err=>{console.log(err)});
 knex.select('*').from('login').then((resp)=>{
     loginInfo=resp;
     // console.log(loginInfo)
-});
+}).catch(err=>{console.log(err)});
 
 server.get('/', (req, res) => {
     res.send("everything works");
