@@ -20,7 +20,7 @@ const handleRegister = (req, res, knex, bcrypt) => {
             .catch(err=> res.status(400).json("something went wrong"));
         });
     } else {
-        res.status(400).send("bad request");
+        res.status(400).json("bad request");
     }
 }
 

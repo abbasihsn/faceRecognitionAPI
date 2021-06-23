@@ -40,7 +40,7 @@ server.get('/userList', (req, res) => {
         validUsers=resp;
         console.log(validUsers)
         res.json(validUsers);
-    }).catch(err => {res.status(404).send("something went wrong")});
+    }).catch(err => {res.status(404).json("something went wrong")});
 })
 
 server.post('/user', (req, res) => {
@@ -55,9 +55,9 @@ server.post('/user', (req, res) => {
             console.log(data);
             res.json(data[0]);
         } else {
-            res.status(404).send("not found");
+            res.status(404).json("not found");
         }
-    }).catch(err => {res.status(404).send("something went wrong")})
+    }).catch(err => {res.status(404).json("something went wrong")})
 })
 
 server.post('/signup', ((req, resp)=> signUp.handleRegister(req, resp, knex, bcrypt)))
@@ -78,7 +78,7 @@ server.post('/signin', (req, res) => {
                 res.status(400).json("wrong password");
             }
         });
-    }).catch(err => {res.status(404).send("something went wrong")})
+    }).catch(err => {res.status(404).json("something went wrong")})
 })
 
 server.put('/postImage', (req, res) => {
