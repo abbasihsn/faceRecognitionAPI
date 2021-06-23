@@ -40,7 +40,7 @@ server.get('/userList', (req, res) => {
         validUsers=resp;
         console.log(validUsers)
         res.json(validUsers);
-    });
+    }).catch(err => {res.status(404).send("something went wrong")});
 })
 
 server.post('/user', (req, res) => {
@@ -57,7 +57,7 @@ server.post('/user', (req, res) => {
         } else {
             res.status(404).send("not found");
         }
-    })
+    }).catch(err => {res.status(404).send("something went wrong")})
 })
 
 server.post('/signup', ((req, resp)=> signUp.handleRegister(req, resp, knex, bcrypt)))
@@ -78,8 +78,7 @@ server.post('/signin', (req, res) => {
                 res.status(400).json("wrong password");
             }
         });
-    })
-    .catch(err=>res.status(404).json(err))
+    }).catch(err => {res.status(404).send("something went wrong")})
 })
 
 server.put('/postImage', (req, res) => {
@@ -99,8 +98,8 @@ server.put('/postImage', (req, res) => {
 
 
 
-server.listen(process.env.PORT, () => {
-    console.log("Listening to the port 3000")
+server.listen(process.env.PORT || 3000, () => {
+    console.log("Listening to the specified port")
 })
 
 findUserById = (id) => {
