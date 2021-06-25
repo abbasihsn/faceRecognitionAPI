@@ -34,7 +34,7 @@ server.get('/userList', (req, res) => {
         validUsers=resp;
         console.log(validUsers)
         res.json(validUsers);
-    }).catch(err => {res.status(404).json("something went wrong")});
+    }).catch(err => {res.status(404).json("something went wrong: " + err)});
 })
 
 server.post('/user', (req, res) => {
