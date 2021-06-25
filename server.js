@@ -4,11 +4,20 @@ const joi = require('joi')
 const bcrypt = require('bcrypt-nodejs');
 const { restart } = require('nodemon');
 const cors = require('cors');
-const knex = require('knex')({
-    client:"pg",
-    connectionString: process.env.DATABASE_URL,
-    ssl: true,
-  });
+
+const parse = require("pg-connection-string").parse;
+const knexx = require('knex');
+
+// Parse the environment variable into an object containing User, Password, Host, Port etc at separate key-value pairs
+const pgconfig = parse(process.env.DATABASE_URL);
+
+// Add SSL setting to default environment variable on a new key-value pair (the value itself is an object)
+pgconfig.ssl = { rejectUnauthorized: false };
+
+const knex = knexx({
+  client: "pg",
+  connection: pgconfig,
+});
 
 const server = new express();
 server.use(express.json());
